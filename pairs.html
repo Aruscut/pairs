@@ -5,19 +5,46 @@
     <style media="screen">
       table th {
         border: red solid 1px;
-        width: 60px;
-        height: 60px;
+        width: 100px;
+        height: 100px;
+      }
+
+      th img {
+        width: 100%;
+        height: 100%;
       }
 
       .cover {
         background: aquamarine;
       }
+
+      #buttons {
+        text-align: center;
+      }
+
+      button {
+        color: cornflowerblue;
+        background: lightblue;
+        width: 160px;
+        height: 25px;
+        font-size: 17px;
+        border-width: 0px;
+        font-weight: 600;
+      }
+
+      button:hover {
+        background: aquamarine
+      }
     </style>
     <title></title>
   </head>
+  <body>
     <table>
     </table>
-  <body>
+    <div id="buttons">
+      <button type="button" data-theme='normal'>普通熊猫人ver</button>
+      <button type="button" data-theme='active'>活泼熊猫人ver</button>
+    </div>
     <script src="Aru.js"></script>
     <script src="pairs.js"></script>
   </body>

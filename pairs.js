@@ -3,6 +3,8 @@ const Pairs = {
   second : null,
   timer : 'OFF',
   pairsNumb : '',
+  started : false,
+  theme: 'normal',
 }
 
 Pairs.reset = function() {
@@ -43,6 +45,24 @@ Pairs.result = function() {
   }
 }
 
+Pairs.setTheme = function(theme) {
+  var started = this.started
+  //log('setTheme', started, typeof started)
+  if(started === false) {
+    this.theme = theme
+    log('setTheme', this.theme)
+  } else {
+    return
+  }
+}
+
+//设定开始，结束
+Pairs.setStarted = function(bool) {
+  var status = bool
+  this.started = status
+}
+
+//插入图片模块
 const numbMartrix = function(row, column) {
   var r = row
   var c = column
@@ -103,10 +123,33 @@ const insertTable = function(selector, row, column) {
   table.innerHTML = temp
 }
 
+const imgTemp = function(n, theme) {
+  var key = theme
+  var themes = {
+    active: {
+      name: 'active',
+      style: 'gif',
+    },
+    normal: {
+      name: 'normal',
+      style: 'jpg',
+    }
+  }
+  var x = themes[key]
+  log('imgTemp', x)
+  var src = `img-panda/${x.name}/${n}.${x.style}`
+  var alt = `img-panda/${x.name}/${n}.${x.style}`
+  var temp = `<img src="${src}" alt='${alt}'>`
+  return temp
+}
+
+//揭开，覆盖方块
 const unCover = function(target) {
   classRemove(target, 'cover')
   var value = target.dataset.value
-  target.innerHTML = value
+  value = parseInt(value)
+  theme = Pairs.theme
+  target.innerHTML = imgTemp(value, theme)
 }
 
 const reCover = function(target) {
@@ -114,6 +157,7 @@ const reCover = function(target) {
   classAdd(target, 'cover')
 }
 
+//检查是否相等
 const checkPairs = function(target) {
   var p = Pairs
   var inFirst = (p.first === null)
@@ -133,6 +177,7 @@ const checkPairs = function(target) {
   }
 }
 
+//
 var bindCells = function() {
   var table = e('table')
   var cells = findAll(table, 'th')
@@ -141,6 +186,7 @@ var bindCells = function() {
     cells[i].addEventListener('click', function(event) {
       var target = event.target
       var covered = target.classList.contains('cover')
+      Pairs.setStarted(true)
       if(covered === true) {
         checkPairs(target)
         Pairs.result()
@@ -149,9 +195,31 @@ var bindCells = function() {
   }
 }
 
-var main = function() {
-  insertTable('table', 6, 2)
-  bindCells()
+var bindButtons = function() {
+  var buttons = eAll('#buttons button')
+  log('bindButtons', buttons, buttons.length)
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', function(event) {
+      var target = event.target
+      log('bindButtons clicked', target)
+      var theme = target.dataset.theme
+      Pairs.setTheme(theme)
+    })
+  }
 }
 
-main()
+var _main = function() {
+  insertTable('table', 4, 5)
+  bindCells()
+  bindButtons()
+}
+
+//test函数
+const unCoverAll = function() {
+  var all = eAll('th')
+  for (var i = 0; i < all.length; i++) {
+    unCover(all[i])
+  }
+}
+
+_main()
