@@ -12,7 +12,6 @@ Pairs.reset = function() {
   this.second = null
   this.timer = 'OFF'
 }
-
 Pairs.compare = function() {
   var first = this.first
   var second = this.second
@@ -38,13 +37,12 @@ Pairs.compare = function() {
     return
   }
 }
-
 Pairs.result = function() {
   if(this.pairsNumb === 0) {
     log('WIN!')
+    Clock.off()
   }
 }
-
 Pairs.setTheme = function(theme) {
   var started = this.started
   //log('setTheme', started, typeof started)
@@ -55,11 +53,46 @@ Pairs.setTheme = function(theme) {
     return
   }
 }
-
 //设定开始，结束
 Pairs.setStarted = function(bool) {
   var status = bool
   this.started = status
+}
+
+//时钟模块
+const Clock = {
+  timer: 'OFF',
+  time: 0,
+  endTime: 0,
+}
+
+Clock.on = function() {
+  var target = e('#clock')
+  if(this.timer === 'OFF') {
+    this.timer = setInterval(function() {
+      Clock.time++
+      target.innerHTML = `TIME : ${Clock.time}S`
+      //log('time', time)
+    }, 1000)
+  }
+}
+Clock.off = function() {
+  //log('clockOff', this.endTime, this.time)
+  var target = e('#clock')
+  clearInterval(this.timer)
+
+  this.timer = 'OFF'
+  this.endTime = this.time
+  this.time = 0
+  //弹窗时冻结时间
+}
+Clock.reset = function() {
+  this.timer = 'OFF'
+  this.endTime = 0
+  this.time = 0
+
+  var target = e('#clock')
+  target.innerHTML = `TIME : ${this.time}S`
 }
 
 //插入图片模块
@@ -187,6 +220,7 @@ var bindCells = function() {
       var target = event.target
       var covered = target.classList.contains('cover')
       Pairs.setStarted(true)
+      Clock.on()
       if(covered === true) {
         checkPairs(target)
         Pairs.result()
