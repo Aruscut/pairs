@@ -18,12 +18,12 @@ var ajax = function(method, path, headers, data, responseCallback){
 
 var e = function(input){
   var target = document.querySelector(input)
-  log('querySelector', input, target)
+  //log('querySelector', input, target)
   return target
 }
 
 var eAll = function(input){
-  log('eAll', document.querySelectorAll(input))
+  //log('eAll', document.querySelectorAll(input))
   return document.querySelectorAll(input)
 }
 

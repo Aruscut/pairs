@@ -7,11 +7,12 @@ const Pairs = {
   theme: 'normal',
 }
 
-Pairs.reset = function() {
+Pairs.clear = function() {
   this.first = null
   this.second = null
   this.timer = 'OFF'
 }
+
 Pairs.compare = function() {
   var first = this.first
   var second = this.second
@@ -21,26 +22,27 @@ Pairs.compare = function() {
   }
   var equal = (first.dataset.value === second.dataset.value)
   if(equal === true) {
-    log('Pairs.compare === equal' )
+    //log('Pairs.compare === equal' )
     this.pairsNumb --
-    this.reset()
+    this.clear()
     return
   } else {
-    log('Pairs.compare === unequal' )
+    //log('Pairs.compare === unequal' )
     if(this.timer === 'OFF') {
       this.timer = setTimeout(function() {
         reCover(first)
         reCover(second)
-        Pairs.reset()
+        Pairs.clear()
       }, 1000)
     }
     return
   }
 }
-Pairs.result = function() {
+Pairs.checkEnd = function() {
   if(this.pairsNumb === 0) {
-    log('WIN!')
-    Clock.off()
+    //log('WIN!')
+    Clock.pause()
+    _alert('win')
   }
 }
 Pairs.setTheme = function(theme) {
@@ -48,22 +50,57 @@ Pairs.setTheme = function(theme) {
   //log('setTheme', started, typeof started)
   if(started === false) {
     this.theme = theme
-    log('setTheme', this.theme)
+    //log('setTheme', this.theme)
   } else {
     return
   }
 }
+
 //设定开始，结束
 Pairs.setStarted = function(bool) {
   var status = bool
   this.started = status
 }
 
+//检查是否相等并处理
+Pairs.checkPairs = function(target) {
+  var inFirst = (this.first === null)
+  var inSecond = (this.first !== null && this.second === null)
+  var full = (this.first !== null && this.second !== null)
+
+  if(inFirst === true) {
+    this.first = target
+    unCover(target)
+  }
+  if (inSecond === true) {
+    this.second = target
+    unCover(target)
+    this.compare()
+  }
+  if (full === true) {
+    return 'full'
+  }
+}
+
+//重设矩阵
+Pairs.reset = function() {
+  this.first = null,
+  this.second = null,
+  this.timer = 'OFF',
+  this.pairsNumb = '',
+  this.started = false,
+  this.theme = 'normal',
+
+  insertTable('table', 4, 7)
+  bindCells()
+  //log('Pairs.reset', Pairs)
+}
+
 //时钟模块
 const Clock = {
   timer: 'OFF',
   time: 0,
-  endTime: 0,
+  lastTime: 0,
 }
 
 Clock.on = function() {
@@ -76,26 +113,103 @@ Clock.on = function() {
     }, 1000)
   }
 }
-Clock.off = function() {
+Clock.pause = function() {
   //log('clockOff', this.endTime, this.time)
   var target = e('#clock')
   clearInterval(this.timer)
 
   this.timer = 'OFF'
-  this.endTime = this.time
-  this.time = 0
   //弹窗时冻结时间
 }
 Clock.reset = function() {
   this.timer = 'OFF'
-  this.endTime = 0
+  this.lastTime = this.time
   this.time = 0
 
   var target = e('#clock')
   target.innerHTML = `TIME : ${this.time}S`
 }
 
-//插入图片模块
+// alert 模块
+var templateAlert = function(message) {
+  var alerts = {
+    win : {
+      title: 'YOU WIN!!!',
+      button: 'OK' ,
+    },
+    pause : {
+      title: '暂停',
+      button: '继续',
+    },
+  }
+  var key = message
+  var t1 = `
+      <div class="alert-content">
+        <div class="alert-mask"></div>
+        <div class="alert-cell">
+          <div id="alert1-message">${alerts[key].title}</div>
+          <div class='alert1-button'>${alerts[key].button}</div>
+        </div>
+      </div>
+      `
+  return t1
+}
+
+var insertAlert = function(string) {
+  var target = e('body')
+  var alert = templateAlert(string)
+  appendHtml(target, alert)
+  //log('inserted')
+}
+
+var alertReset = function() {
+  var t = event.target
+  //log('bindDelete', t)
+  var alert = t.classList.contains("alert1-button")
+  if(alert) {
+    //log('alert1-button clicked')
+    var p = e('.alert-content')
+    p.remove()
+
+    Clock.reset()
+    Pairs.reset()
+
+    var b = e('body')
+    b.removeEventListener('click', alertReset)//回收deleteAlert
+  }
+}
+
+var alertPause = function() {
+  var t = event.target
+  //log('bindDelete', t)
+  var alert = t.classList.contains("alert1-button")
+  if(alert) {
+    //log('alert1-button clicked')
+    var p = e('.alert-content')
+    p.remove()
+
+    Clock.on()
+
+    var b = e('body')
+    b.removeEventListener('click', alertPause)//回收deleteAlert
+  }
+}
+
+var bindAlert = function(message) {
+  var key = message
+  alerts = {
+    win: alertReset,
+    pause: alertPause,
+  }
+  bind('body', 'click', alerts[key])
+}
+
+var _alert = function(message) {
+  bindAlert(message)
+  insertAlert(message)
+}
+
+//插入矩阵模块
 const numbMartrix = function(row, column) {
   var r = row
   var c = column
@@ -123,7 +237,7 @@ const numbMartrix = function(row, column) {
     square[x][y] = i
     //log('numbMartrix', x,  y)
   }
-  log('numbMartrix', square)
+  log('答案numbMartrix ：', square)
   return square
 }
 
@@ -156,6 +270,7 @@ const insertTable = function(selector, row, column) {
   table.innerHTML = temp
 }
 
+//揭开，覆盖方块
 const imgTemp = function(n, theme) {
   var key = theme
   var themes = {
@@ -169,14 +284,13 @@ const imgTemp = function(n, theme) {
     }
   }
   var x = themes[key]
-  log('imgTemp', x)
+  //log('imgTemp', x)
   var src = `img-panda/${x.name}/${n}.${x.style}`
   var alt = `img-panda/${x.name}/${n}.${x.style}`
   var temp = `<img src="${src}" alt='${alt}'>`
   return temp
 }
 
-//揭开，覆盖方块
 const unCover = function(target) {
   classRemove(target, 'cover')
   var value = target.dataset.value
@@ -190,31 +304,12 @@ const reCover = function(target) {
   classAdd(target, 'cover')
 }
 
-//检查是否相等
-const checkPairs = function(target) {
-  var p = Pairs
-  var inFirst = (p.first === null)
-  var inSecond = (p.first !== null && p.second === null)
-  var full = (p.first !== null && p.second !== null)
-  if(inFirst === true) {
-    p.first = target
-    unCover(target)
-  }
-  if (inSecond === true) {
-    p.second = target
-    unCover(target)
-    p.compare()
-  }
-  if (full === true) {
-    return 'full'
-  }
-}
 
 //
 var bindCells = function() {
   var table = e('table')
   var cells = findAll(table, 'th')
-  log('bindCells', cells)
+  //log('bindCells', cells)
   for (let i = 0; i < cells.length; i++) {
     cells[i].addEventListener('click', function(event) {
       var target = event.target
@@ -222,8 +317,8 @@ var bindCells = function() {
       Pairs.setStarted(true)
       Clock.on()
       if(covered === true) {
-        checkPairs(target)
-        Pairs.result()
+        Pairs.checkPairs(target)
+        Pairs.checkEnd()
       }
     })
   }
@@ -231,21 +326,22 @@ var bindCells = function() {
 
 var bindButtons = function() {
   var buttons = eAll('#buttons button')
-  log('bindButtons', buttons, buttons.length)
+  //log('bindButtons', buttons, buttons.length)
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener('click', function(event) {
       var target = event.target
-      log('bindButtons clicked', target)
+      //log('bindButtons clicked', target)
       var theme = target.dataset.theme
       Pairs.setTheme(theme)
     })
   }
 }
 
-var _main = function() {
-  insertTable('table', 4, 5)
-  bindCells()
-  bindButtons()
+var bindPause = function() {
+  bind('#pause', 'click', function() {
+    Clock.pause()
+    _alert('pause')
+  })
 }
 
 //test函数
@@ -254,6 +350,12 @@ const unCoverAll = function() {
   for (var i = 0; i < all.length; i++) {
     unCover(all[i])
   }
+}
+
+var _main = function() {
+  Pairs.reset()
+  bindButtons()
+  bindPause()
 }
 
 _main()
